@@ -23,7 +23,9 @@ dashboard shows the same information from any browser on the network.
 - TCP audio server on port **7000** for up to **4 clients** at the same time.
 - Bluetooth A2DP sink, visible as **`Audio_Server_ESP32`**.
 - Mode changes on the fly: move the switch and the device restarts the audio pipeline in the new mode.
-- Wi-Fi setup from your phone's browser; credentials are stored in flash (NVS).
+- Bluetooth and Aux work without any network setup; only the TCP server needs Wi-Fi.
+- Wi-Fi and time-zone setup from your phone's browser, stored in flash (NVS). If the router is
+  slow to come back after a power cut, the device keeps the saved network and retries on its own.
 - OLED status screen and a web dashboard with level meters, connected-client count and network time.
 
 ## Status
@@ -105,8 +107,8 @@ Power the module according to its silkscreen: many PCM1808 boards have separate 
 
 ## Building the firmware
 
-1. Install the **Arduino IDE** and the **esp32 by Espressif** board package, version **2.0.x**.
-   The sketch uses the legacy `driver/i2s.h` API from that series.
+1. Install the **Arduino IDE** and the **esp32 by Espressif** board package. The sketch uses the
+   legacy `driver/i2s.h` API and is verified to compile with esp32 **3.3.10** and ESP32-A2DP **1.8.11**.
 2. Install these libraries from the Library Manager (`Ctrl+Shift+I`):
    - `Adafruit GFX Library`
    - `Adafruit SSD1306`
@@ -119,18 +121,23 @@ Power the module according to its silkscreen: many PCM1808 boards have separate 
 
 ## First-time setup
 
-Wi-Fi has to be configured once before any mode starts, including Bluetooth and Aux.
+Only the TCP server mode needs Wi-Fi. Bluetooth and Aux work right away.
 
-1. Power the device. The OLED shows the setup screen.
+1. Set the switch to **A** (TCP server) and power the device. With no saved network, the OLED
+   shows the setup screen.
 2. On your phone, join the open Wi-Fi network **`AudioServer_Setup`**.
 3. Open **http://192.168.4.1** in the browser.
-4. Pick your network, enter the password and save. The device restarts and joins your network.
+4. Pick your network, enter the password, choose your time zone and save. The device restarts
+   and joins your network.
 5. The OLED shows the selected mode and the device's IP address.
 
-To change networks later, open the dashboard and use the **reset** link, which erases the saved
-Wi-Fi and restarts in setup mode.
+If the saved network doesn't answer within 10 seconds (for example, the router is still
+booting after a power cut), the OLED shows **CAN'T JOIN WI-FI**. The device keeps the saved
+settings, opens `AudioServer_Setup` in case you want to pick another network, and retries the
+saved one every 30 seconds. As soon as it connects, it restarts in normal mode.
 
-> The on-device web pages and OLED messages are currently in Portuguese.
+To change networks later, open the dashboard and use **Reset Wi-Fi**, which erases the saved
+network and restarts the device.
 
 ## Dashboard
 
@@ -139,10 +146,11 @@ Browse to `http://<device-ip>/` from any device on the same network. The page re
 
 - current mode and IP address;
 - connected TCP clients (out of 4);
-- network time;
+- network time in your time zone;
 - line-in and line-out levels.
 
-The dashboard isn't available in Bluetooth mode, because Wi-Fi is off.
+The dashboard works in TCP server mode, and in Aux mode when a network is saved. It isn't
+available in Bluetooth mode, because Wi-Fi is off.
 
 ---
 
@@ -182,7 +190,8 @@ OLED shows the output level and whether music is playing. Wi-Fi is off in this m
 ### B — Aux pass-through
 
 The line input goes straight to the line output through the ESP32. Use it to monitor the
-input locally without a network.
+input locally without a network. If a Wi-Fi network is saved, the device joins it in the
+background so the dashboard stays available; the audio doesn't depend on it.
 
 ---
 
@@ -196,7 +205,7 @@ input locally without a network.
 | Network | Wi-Fi 2.4 GHz, TCP port 7000, web dashboard on port 80 |
 | Bluetooth | Classic Bluetooth A2DP sink |
 | Display | 128 × 64 SSD1306 OLED |
-| Clock | NTP (`pool.ntp.br`), fixed at UTC−3 — change `configTime()` for your time zone |
+| Clock | NTP (`pool.ntp.org`), time zone chosen at setup (UTC offset, no daylight saving) |
 
 ## Troubleshooting
 
@@ -208,7 +217,7 @@ input locally without a network.
 | No signal from the line input | Check that the PCM1808 SCK pin is wired to GPIO 3 and that FMT, MD0 and MD1 are grounded. |
 | OLED stays blank | Check GPIO 21/22 and the I2C address (`0x3C`). |
 | No Bluetooth audio | Install `ESP32-A2DP` and pair with `Audio_Server_ESP32`. |
-| Device is back in setup mode after a power cut | If the device can't join the saved network within 10 s of booting, it erases the saved Wi-Fi and restarts in setup mode. Run the setup again once the router is up. |
+| OLED shows **CAN'T JOIN WI-FI** | The saved network didn't answer. Wait: the device retries every 30 s and connects on its own when the router is back. If the password changed, join `AudioServer_Setup` and enter it again. |
 
 ---
 
@@ -219,7 +228,9 @@ input locally without a network.
 | `ESP32_audio_project/ESP32_audio_project.ino` | Main sketch: mode state machine, TCP server, Bluetooth, OLED |
 | `ESP32_audio_project/AudioI2SForESP32.h` | I2S setup for the ADC and DAC, including the master clock on GPIO 3 |
 | `ESP32_audio_project/html_pages.h` | Setup and dashboard web pages, served by the device |
-| `ESP32_audio_project/setup.html`, `dashboard.html` | Standalone versions of the web pages |
+| `ESP32_audio_project/logo_png.h` | Logo for the web pages, stored in flash so it shows even without internet |
+| `ESP32_audio_project/setup.html`, `dashboard.html` | Static previews of the web pages with sample data |
+| `ESP32_audio_project/logo_web.png` | Source image for `logo_png.h` |
 | `test_tcp_LINE_IN.ipynb`, `test_tcp_LINE_OUT.ipynb` | Python test clients |
 
 ## License

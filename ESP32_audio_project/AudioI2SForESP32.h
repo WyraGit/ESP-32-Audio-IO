@@ -2,9 +2,12 @@
 #define AUDIOI2SFORESP32_H
 
 #include <driver/i2s.h>
-#include <soc/io_mux_reg.h> // <-- ADICIONADO: Necessário para rotear o MCLK
 
 #define VERSAO_LIB 1.0
+
+// Master clock (MCLK) do PCM1808. O ESP32 só consegue tirar o MCLK pelos
+// GPIO 0, 1 ou 3; aqui vai pelo GPIO 3 (RX0).
+#define I2S_RX_MCLK   3
 
 // ============================================================
 // FUNÇÕES DE INICIALIZAÇÃO DE ÁUDIO I2S
@@ -26,7 +29,11 @@ void initI2S_TX() {
   };
   i2s_driver_install(I2S_NUM_0, &cfg, 0, NULL);
 
+  // O PCM5102A gera o próprio clock (pino SCK no GND), então o I2S0 não
+  // tira MCLK em pino nenhum. Sem o campo explícito ele valeria 0 e o
+  // driver poria o MCLK no GPIO 0, que é o botão BOOT.
   i2s_pin_config_t pins = {
+    .mck_io_num   = I2S_PIN_NO_CHANGE,
     .bck_io_num   = I2S_TX_BCK,
     .ws_io_num    = I2S_TX_WS,
     .data_out_num = I2S_TX_DOUT,
@@ -52,21 +59,16 @@ void initI2S_RX() {
   };
   i2s_driver_install(I2S_NUM_1, &cfg, 0, NULL);
 
+  // O PCM1808 precisa de MCLK (256 x 44,1 kHz) para gerar amostras.
+  // O próprio driver roteia o MCLK do I2S1 para o GPIO 3 (função CLK_OUT2).
   i2s_pin_config_t pins = {
+    .mck_io_num   = I2S_RX_MCLK,
     .bck_io_num   = I2S_RX_BCK,
     .ws_io_num    = I2S_RX_WS,
     .data_out_num = I2S_PIN_NO_CHANGE,
     .data_in_num  = I2S_RX_DIN
   };
   i2s_set_pin(I2S_NUM_1, &pins);
-
-  // ==============================================================
-  // HACK HARDWARE: Roteia o Master Clock (MCLK) do I2S1 para o pino RX0 (GPIO 3)
-  // Obrigatório para o PCM1808 gerar amostras de áudio.
-  // ==============================================================
-  PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0RXD_U, FUNC_U0RXD_CLK_OUT2);
-  REG_WRITE(PIN_CTRL, (REG_READ(PIN_CTRL) & 0xFFFFFF0F) | (0x10)); 
-  // ==============================================================
 }
 
 #endif // AUDIOI2SFORESP32_H

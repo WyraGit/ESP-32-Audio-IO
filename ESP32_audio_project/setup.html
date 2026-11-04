@@ -1,15 +1,16 @@
+<!-- Prévia estática da página de configuração (dados de exemplo). A página real fica em html_pages.h. -->
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/HarpyjaTech/ESP-32-Audio-IO/BT_version/ESP32_audio_project/logo.png">
-  <title>Harpyja.Tech - Setup</title>
+  <title>Wyrá - Setup</title>
+  <link rel="icon" type="image/png" href="logo_web.png">
   <style>
     :root {
       --bg-color: #000000;
       --card-bg: #121212;
-      --primary: #c38b38; /* Ajustado para o tom dourado da sua logo */
+      --primary: #c38b38;
       --primary-hover: #a3722b;
       --text-main: #ffffff;
       --text-muted: #888888;
@@ -31,9 +32,15 @@
       border: 1px solid var(--border-color); text-align: center;
     }
     .logo-container { margin-bottom: 25px; background: rgba(0, 0, 0, 0)}
-    .logo-container img { max-width: 220px; height: auto; }
+    .logo-container img { max-width: 220px; width: 100%; height: auto; }
+    .brand { font-family: ui-monospace, Consolas, Menlo, monospace; font-size: 26px; letter-spacing: 2px; margin-top: 8px; }
     .header { margin-bottom: 30px; }
     .header p { color: var(--text-muted); font-size: 15px; letter-spacing: 1px; text-transform: uppercase;}
+    .notice {
+      background: rgba(195, 139, 56, 0.12); border: 1px solid rgba(195, 139, 56, 0.4);
+      color: var(--text-main); font-size: 14px; line-height: 1.5; text-align: left;
+      padding: 12px 14px; border-radius: 8px; margin-bottom: 20px;
+    }
     .input-group { margin-bottom: 20px; text-align: left; }
     label {
       display: block; font-size: 12px; font-weight: 600; color: var(--text-muted);
@@ -61,23 +68,32 @@
 <body>
   <div class="card">
     <div class="logo-container">
-      <img src="https://raw.githubusercontent.com/HarpyjaTech/ESP-32-Audio-IO/BT_version/ESP32_audio_project/logo.png" alt="Harpyja.Tech">
+      <img src="logo_web.png" alt="">
+      <div class="brand">Wyrá</div>
     </div>
     <div class="header">
-      <p>Configuração de Rede</p>
+      <p>Network setup</p>
     </div>
-    <form>
+    <div class='notice'>Couldn't join <b>Studio_WiFi</b>. The device keeps retrying every 30 seconds. To use another network, choose it below.</div>
+    <form onsubmit="return false">
       <div class="input-group">
-        <label>Wi-Fi Local</label>
-        <select required>
-          <option value="" disabled selected>Igreja_Principal_5G</option>
+        <label>Wi-Fi network</label>
+        <select name="ssid" required>
+          <option value="" disabled selected>Choose a network</option>
+          <option value='Studio_WiFi' selected>Studio_WiFi (-48 dBm)</option><option value='Church_Main'>Church_Main (-61 dBm)</option>
         </select>
       </div>
       <div class="input-group">
-        <label>Senha do Wi-Fi</label>
-        <input type="password" placeholder="••••••••">
+        <label>Wi-Fi password</label>
+        <input type="password" name="pass" placeholder="Leave blank for an open network">
       </div>
-      <button type="button">Salvar e Conectar</button>
+      <div class="input-group">
+        <label>Time zone</label>
+        <select name="tz">
+          <option value='-720'>UTC-12:00</option><option value='-690'>UTC-11:30</option><option value='-660'>UTC-11:00</option><option value='-630'>UTC-10:30</option><option value='-600'>UTC-10:00</option><option value='-570'>UTC-09:30</option><option value='-540'>UTC-09:00</option><option value='-510'>UTC-08:30</option><option value='-480'>UTC-08:00</option><option value='-450'>UTC-07:30</option><option value='-420'>UTC-07:00</option><option value='-390'>UTC-06:30</option><option value='-360'>UTC-06:00</option><option value='-330'>UTC-05:30</option><option value='-300'>UTC-05:00</option><option value='-270'>UTC-04:30</option><option value='-240'>UTC-04:00</option><option value='-210'>UTC-03:30</option><option value='-180' selected>UTC-03:00</option><option value='-150'>UTC-02:30</option><option value='-120'>UTC-02:00</option><option value='-90'>UTC-01:30</option><option value='-60'>UTC-01:00</option><option value='-30'>UTC-00:30</option><option value='0'>UTC+00:00</option><option value='30'>UTC+00:30</option><option value='60'>UTC+01:00</option><option value='90'>UTC+01:30</option><option value='120'>UTC+02:00</option><option value='150'>UTC+02:30</option><option value='180'>UTC+03:00</option><option value='210'>UTC+03:30</option><option value='240'>UTC+04:00</option><option value='270'>UTC+04:30</option><option value='300'>UTC+05:00</option><option value='330'>UTC+05:30</option><option value='360'>UTC+06:00</option><option value='390'>UTC+06:30</option><option value='420'>UTC+07:00</option><option value='450'>UTC+07:30</option><option value='480'>UTC+08:00</option><option value='510'>UTC+08:30</option><option value='540'>UTC+09:00</option><option value='570'>UTC+09:30</option><option value='600'>UTC+10:00</option><option value='630'>UTC+10:30</option><option value='660'>UTC+11:00</option><option value='690'>UTC+11:30</option><option value='720'>UTC+12:00</option><option value='750'>UTC+12:30</option><option value='780'>UTC+13:00</option><option value='810'>UTC+13:30</option><option value='840'>UTC+14:00</option>
+        </select>
+      </div>
+      <button type="submit">Save and connect</button>
     </form>
   </div>
 </body>
