@@ -1,0 +1,4 @@
+# Only the "listen" and "send-pc" commands need these.
+# "record", "send-file" and "tone" run on the Python standard library alone.
+soundcard>=0.4.3
+numpy

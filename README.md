@@ -174,13 +174,42 @@ available in Bluetooth mode, because Wi-Fi is off.
   stream; otherwise the device's TCP buffer fills up and audio stalls.
 - Add a jitter buffer of at least 50 ms in your client to ride out Wi-Fi hiccups.
 
-**Example clients (Python):** the repository includes two Jupyter notebooks. Set `ESP32_IP` to
-the address shown on the OLED before running them.
+#### Python client
 
-| Notebook | What it does | Needs |
+[`client/wyra_audio_client.py`](client/wyra_audio_client.py) is a ready-made client for this mode
+(Python 3.8 or newer). Use the IP address shown on the OLED:
+
+```bash
+python client/wyra_audio_client.py 192.168.1.150 listen
+```
+
+| Command | What it does | Needs |
 | :--- | :--- | :--- |
-| `test_tcp_LINE_IN.ipynb` | Plays the device's line input on the PC speakers | `pip install pyaudio` |
-| `test_tcp_LINE_OUT.ipynb` | Captures what the PC is playing (loopback) and sends it to the line output | `pip install soundcard numpy` |
+| `listen` | Plays the line input on this computer | `pip install soundcard numpy` |
+| `record show.wav` | Saves the line input to a WAV file (`--seconds 60` to stop on its own) | nothing extra |
+| `send-pc` | Sends what this computer is playing to the line output (Windows and Linux) | `pip install soundcard numpy` |
+| `send-file song.wav` | Sends a 44.1 kHz / 16-bit WAV file to the line output (`--loop` to repeat) | nothing extra |
+| `tone` | Sends a test tone to the line output (`--freq 440 --level -12`) | nothing extra |
+
+The client shows live level meters and reconnects on its own if the connection drops, for
+example when you move the mode switch. Add `--swap-lr` if left and right come out swapped. If the
+sound breaks up on a busy network, raise `--buffer-ms` (default 80 ms for `listen`, 100 ms for
+`send-pc`), at the cost of a little more delay. Run it with `--help` for every option.
+
+**No hardware yet?** [`client/fake_hub.py`](client/fake_hub.py) pretends to be an Audio Hub on
+your own computer: it streams a test tone as the line input and can save what clients send.
+Start it, then point the client (or your own app) at `127.0.0.1`:
+
+```bash
+python client/fake_hub.py --save line_out.wav
+```
+
+```bash
+python client/wyra_audio_client.py 127.0.0.1 tone --seconds 5
+```
+
+The two Jupyter notebooks (`test_tcp_LINE_IN.ipynb` and `test_tcp_LINE_OUT.ipynb`) are the
+original minimal examples of the same protocol.
 
 ### Center — Bluetooth speaker (A2DP)
 
@@ -231,7 +260,10 @@ background so the dashboard stays available; the audio doesn't depend on it.
 | `ESP32_audio_project/logo_png.h` | Logo for the web pages, stored in flash so it shows even without internet |
 | `ESP32_audio_project/setup.html`, `dashboard.html` | Static previews of the web pages with sample data |
 | `ESP32_audio_project/logo_web.png` | Source image for `logo_png.h` |
-| `test_tcp_LINE_IN.ipynb`, `test_tcp_LINE_OUT.ipynb` | Python test clients |
+| `client/wyra_audio_client.py` | Python client for the TCP server mode: listen, record, send audio, test tone |
+| `client/fake_hub.py` | Stand-in for an Audio Hub, to test clients without hardware |
+| `client/requirements.txt` | Packages for the client's `listen` and `send-pc` commands |
+| `test_tcp_LINE_IN.ipynb`, `test_tcp_LINE_OUT.ipynb` | Original minimal Python examples |
 
 ## License
 
