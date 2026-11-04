@@ -1,0 +1,98 @@
+<!-- Prévia estática do painel (dados de exemplo). A página real fica em html_pages.h. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wyrá - Dashboard</title>
+  <link rel="icon" type="image/png" href="logo_web.png">
+  <style>
+    :root {
+      --bg-color: #000000;
+      --card-bg: #121212;
+      --primary: #c38b38;
+      --danger: #dc3545;
+      --text-main: #ffffff;
+      --text-muted: #888888;
+      --box-bg: #1e1e1e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color); color: var(--text-main);
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; padding: 20px;
+    }
+    .card {
+      background: var(--card-bg); width: 100%; max-width: 450px;
+      padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+      text-align: center; border: 1px solid #333;
+    }
+    .logo-container { margin-bottom: 20px; background: rgba(0, 0, 0, 0)}
+    .logo-container img { max-width: 220px; width: 100%; height: auto; display: inline-block; }
+    .brand { font-family: ui-monospace, Consolas, Menlo, monospace; font-size: 26px; letter-spacing: 2px; margin-top: 8px; }
+    .status-badge {
+      display: inline-block; background: rgba(0, 0, 0, 0); color: var(--primary);
+      padding: 6px 18px; border-radius: 20px; font-size: 13px; font-weight: bold;
+      letter-spacing: 1px; margin-bottom: 25px; border: 1px solid rgba(195, 139, 56, 0.4);
+    }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
+    .box {
+      background: var(--box-bg); padding: 15px; border-radius: 8px; text-align: left;
+      border-left: 4px solid var(--primary);
+    }
+    .box-title { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+    .box-value { font-size: 16px; font-weight: bold; }
+
+    /* VU METERS */
+    .vu-container { background: var(--box-bg); padding: 15px; border-radius: 8px; margin-bottom: 12px; text-align: left; }
+    .vu-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; margin-bottom: 8px; }
+    .vu-bar-bg { width: 100%; height: 12px; background: #000; border-radius: 6px; overflow: hidden; }
+    .vu-bar-fill { height: 100%; background: linear-gradient(90deg, #28a745 0%, #ffc107 75%, #dc3545 100%); transition: width 0.3s ease; }
+
+    .btn-reset {
+      display: block; width: 100%; padding: 14px; margin-top: 20px; background: transparent;
+      color: var(--danger); font-size: 15px; font-weight: bold; text-decoration: none;
+      border: 1px solid var(--danger); border-radius: 8px; transition: all 0.3s ease;
+    }
+    .btn-reset:hover { background: var(--danger); color: #fff; box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo-container">
+      <img src="logo_web.png" alt="">
+      <div class="brand">Wyrá</div>
+    </div>
+
+    <div class="status-badge">TCP SERVER MODE</div>
+
+    <div class="grid">
+      <div class="box">
+        <div class="box-title">Device IP</div>
+        <div class="box-value">192.168.1.150</div>
+      </div>
+      <div class="box">
+        <div class="box-title">TCP clients (port 7000)</div>
+        <div class="box-value">2 / 4</div>
+      </div>
+      <div class="box">
+        <div class="box-title">Time (UTC-03:00)</div>
+        <div class="box-value">14:32:05</div>
+      </div>
+    </div>
+
+    <div class="vu-container">
+      <div class="vu-header"><span>Line in</span><span>75%</span></div>
+      <div class="vu-bar-bg"><div class="vu-bar-fill" style="width: 75%;"></div></div>
+    </div>
+
+    <div class="vu-container">
+      <div class="vu-header"><span>Line out</span><span>40%</span></div>
+      <div class="vu-bar-bg"><div class="vu-bar-fill" style="width: 40%;"></div></div>
+    </div>
+
+    <a href="#" class="btn-reset" onclick="return confirm('Erase the saved Wi-Fi and restart?');">Reset Wi-Fi</a>
+  </div>
+</body>
+</html>

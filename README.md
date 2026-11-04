@@ -1,91 +1,243 @@
-# Interface de Áudio Wi-Fi Bidirecional com ESP32 🎧📡
+# Wyrá Audio Hub — ESP32 Audio I/O
 
 <a href="https://buymeacoffee.com/hapyjatech" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
-Este projeto transforma um ESP32 padrão num sistema profissional de transmissão e recepção de áudio sem fios com qualidade de CD (44.1kHz/16-bits), utilizando o protocolo **VBAN** para integração em tempo real com **Voicemeeter** ou **OBS Studio**.
+Turn a classic **ESP32** into a two-way digital audio hub for mixers, PCs and phones.
+Stereo line in and line out at **44.1 kHz / 16-bit**, with three modes you pick on a
+physical switch:
 
-Desenvolvido para captura de mesas de som e retorno, superando as graves limitações de qualidade e latência do Bluetooth clássico. O dispositivo inclui um portal cativo web (Captive Portal) para configuração e um visor OLED integrado para monitoramento das métricas em tempo real (VU Meter).
+| Switch position | Mode | What it does |
+| :--- | :--- | :--- |
+| **A** | **Wi-Fi audio server (TCP)** | Streams the line input to apps on your network and plays audio they send back. |
+| **Center** | **Bluetooth speaker (A2DP)** | Pair a phone or laptop and its audio comes out of the line output. Wi-Fi is switched off. |
+| **B** | **Aux pass-through** | Sends the line input straight to the line output (ADC → DAC), no network needed. |
 
-## 🚀 Funcionalidades
-* **Áudio Full-Duplex (Bidirecional)** simultâneo (I2S).
-* Captura de áudio usando módulo ADC **PCM1808**.
-* Reprodução de retorno/música usando módulo DAC **PCM5102A**.
-* Interface de rede gráfica via web.
-* Visor OLED integrado para acompanhamento do relógio NTP, IP, Força do Sinal Wi-Fi (RSSI) e Níveis de Volume de Áudio.
-* Ligação e reinicialização automáticas, com armazenamento protegido não-volátil (NVS).
-
----
-
-## 🛠️ Hardware Necessário
-
-O código e o mapeamento de hardware foram desenvolvidos especificamente para as versões de breakout boards para facilitar a montagem (sem soldagem SMD).
-
-1. **Placa de Desenvolvimento:** [ESP32 com Ecrã OLED 0.96" Integrado (I2C)](https://shopee.com.br/Placa-de-Desenvolvimento-ESP32-com-Display-OLED-de-0-96-Polegadas-M%C3%B3dulo-Sem-Fio-WiFi-BLE-e-Micro-USB-para-Arduino-i.315831373.43178345220)
-2. **ADC (Entrada da Mesa):** [Placa Amplificadora Estéreo de Alta Resolução PCM1808 (24-Bits)](https://shopee.com.br/Placa-Amplificadora-ADC-Est%C3%A9reo-De-Alta-Resolu%C3%A7%C3%A3o-PCM1808-105dB-SNR-24-Bits-Para-Audi%C3%B3filos-i.426921557.28887729677)
-3. **DAC (Saída para Mesa):** [Módulo Reprodutor Áudio PCM5102A Interface Digital I2S](https://shopee.com.br/Leitor-De-%C3%81udio-SHEENGD1-PCM5102A-I2S-M%C3%B3dulo-Reprodutor-I2S-Digital-Interface-PCM5102A-DAC-i.594020711.40078197333)
-4. **Alimentação:** Carregador de qualidade superior (5V / 2A mínimo) para alimentar a porta Micro-USB do ESP32.
-5. **Conectores / Complementos:**
-   - 2x Conectores Jack P10 Fêmea de Painel (Para o *Line In*).
-   - 1x Conector Jack P10 ou P2 Fêmea de Painel (Para o *Line Out*).
-   - Fio Blindado de Áudio (para evitar ruídos do rádio Wi-Fi na fase analógica).
-   - Placa de ensaio (Protoboard) e jumpers Dupont fêmea-macho.
-   - *Recomendado:* 2 capacitores eletrolíticos (220µF) na linha 3.3V / GND.
+A 0.96" OLED shows the current mode, IP address and input/output level meters, and a web
+dashboard shows the same information from any browser on the network.
 
 ---
 
-## 🔌 Esquema de Ligações (Pinout)
+## Features
 
-[cite_start]O código foi rigorosamente desenhado para evitar conflito de barramentos entre o display OLED interno e os dois barramentos de áudio I2S utilizados. 
+- Full-duplex stereo audio over two I2S buses: **PCM1808** ADC in, **PCM5102A** DAC out.
+- TCP audio server on port **7000** for up to **4 clients** at the same time.
+- Bluetooth A2DP sink, visible as **`Audio_Server_ESP32`**.
+- Mode changes on the fly: move the switch and the device restarts the audio pipeline in the new mode.
+- Bluetooth and Aux work without any network setup; only the TCP server needs Wi-Fi.
+- Wi-Fi and time-zone setup from your phone's browser, stored in flash (NVS). If the router is
+  slow to come back after a power cut, the device keeps the saved network and retries on its own.
+- OLED status screen and a web dashboard with level meters, connected-client count and network time.
 
-> **Aviso:** A placa ESP32 deve alimentar os módulos PCM de áudio exclusivamente no pino `3.3V`, todos devem partilhar a mesma ligação de Terra (`GND`).
+## Status
 
-### 1. Conexão do Ecrã OLED (Interno à placa recomendada)
-| ESP32 Pin | Função I2C |
+| Function | Status |
 | :--- | :--- |
-| **GPIO 21** | SDA (Data) |
-| **GPIO 22** | SCL (Clock) |
-
-### 2. Conexão da Entrada Analógica (PCM1808 - Line In)
-Captura o áudio vindo da sua mesa de som e injeta digitalmente no ESP32.
-
-| PCM1808 Pin | ESP32 Pin | Função I2S (Barramento 1 - Apenas RX) |
-| :--- | :--- | :--- |
-| **BCK** | **GPIO 14** | Bit Clock |
-| **LRCK** | **GPIO 12** | Word Select (Left/Right Clock) |
-| **DOUT** | **GPIO 13** | Digital Audio Data Input (Entra no ESP32) |
-| **SCK** | **GND** | System Clock (Mantido no terra em modo Master/ESP) |
-
-### 3. Conexão da Saída Analógica (PCM5102A - Line Out)
-Recebe música digital do ESP32 e converte em analógico para enviar à mesa/fone.
-
-| PCM5102A Pin | ESP32 Pin | Função I2S (Barramento 0 - Apenas TX) |
-| :--- | :--- | :--- |
-| **BCK** | **GPIO 26** | Bit Clock |
-| **LCK (LRCK)** | **GPIO 25** | Word Select (Left/Right Clock) |
-| **DIN** | **GPIO 18** | Digital Audio Data Output (Sai do ESP32) |
-| **SCK** | **GND** | System Clock |
+| Line out over TCP (PC → device) | ✅ Tested on hardware |
+| Bluetooth A2DP playback | ✅ Tested on hardware |
+| Line in over TCP (device → PC) | 🧪 Implemented, hardware test in progress |
+| Aux pass-through | 🧪 Implemented, hardware test in progress |
 
 ---
 
-## ⚙️ Como Usar
+## Hardware
 
-### Instalação Física
-1. Instale o firmware através do **Arduino IDE**.
-2. Certifique-se de instalar as bibliotecas `Adafruit_GFX` e `Adafruit_SSD1306`.
-3. Selecione o modelo padrão ESP32 Dev Module e faça o upload.
+| Part | Notes |
+| :--- | :--- |
+| **ESP32 dev board with built-in 0.96" OLED** | Classic ESP32 (WROOM/WROVER). Bluetooth A2DP needs the original ESP32 — S2, S3, C3 and C6 chips won't work. OLED: SSD1306, I2C address `0x3C`. |
+| **PCM1808 ADC module** | Line input from the mixer. 24-bit converter, used here at 16 bits. |
+| **PCM5102A DAC module** | Line output to the mixer, headphones or amplifier. |
+| **3-position slide switch (SP3T)** | Mode selector. |
+| **2 × 10 kΩ resistors** | Pull-ups for the switch — required, see the wiring notes. |
+| **5 V / 2 A USB power supply** | A weak supply can cause resets and audible noise. |
+| Jacks and cable | 1/4" (6.35 mm) or 3.5 mm panel jacks; shielded audio cable to keep Wi-Fi noise out of the analog path. |
+| *Recommended* | 220 µF electrolytic capacitors between 3.3 V and GND near the audio modules. |
 
-### Primeira Configuração
-1. Assim que for ligado, o visor OLED indicará o estado: `MODO CONFIGURACAO`.
-2. Aceda, no seu smartphone, à rede Wi-Fi criada: **`ESP32_Audio_Setup`**.
-3. Abra o navegador e digite o endereço IP: **`192.168.4.1`**.
-4. Irá abrir a nossa interface web. Selecione a rede do local, insira a palavra-passe e defina qual será o Endereço IP do seu Computador (onde corre o OBS / Voicemeeter).
-5. Prima Guardar. O ESP32 reiniciará e ligar-se-á autonomamente à rede da Igreja ou Estúdio.
+### Wiring
 
-### Interação com o Voicemeeter
-- No computador anfitrião, abra o **Voicemeeter** (Potato ou Banana).
-- Ligue a funcionalidade **VBAN**.
-- **Entrada (Som da Mesa para Live):** Em *Incoming Streams*, adicione um stream com o IP indicado no ecrã OLED e nomeie-o `Stream1`.
-- **Saída (Música do PC para a Mesa):** Em *Outgoing Streams*, aponte para o IP do ESP32 na porta 6980.
+All modules share a common **GND**.
+
+**OLED (built into the recommended board)**
+
+| OLED | ESP32 |
+| :--- | :--- |
+| SDA | GPIO 21 |
+| SCL | GPIO 22 |
+
+If your board wires its OLED to other pins, change `OLED_SDA` and `OLED_SCL` in the sketch.
+
+**PCM1808 — line in (I2S1, receive only)**
+
+| PCM1808 | ESP32 | Signal |
+| :--- | :--- | :--- |
+| BCK | GPIO 14 | Bit clock |
+| LRCK (LRC) | GPIO 12 | Word select |
+| DOUT (OUT) | GPIO 13 | Audio data into the ESP32 |
+| SCK (SCKI) | **GPIO 3 (RX0)** | Master clock — the PCM1808 needs it to produce samples |
+| FMT, MD0, MD1 | GND | I2S format, slave mode |
+
+Power the module according to its silkscreen: many PCM1808 boards have separate 5 V
+(analog) and 3.3 V (digital) pins.
+
+**PCM5102A — line out (I2S0, transmit only)**
+
+| PCM5102A | ESP32 | Signal |
+| :--- | :--- | :--- |
+| BCK | GPIO 26 | Bit clock |
+| LCK (LRCK) | GPIO 25 | Word select |
+| DIN | GPIO 18 | Audio data out of the ESP32 |
+| SCK | GND | Lets the DAC generate its own clock |
+| VIN | 3.3 V | |
+
+**Mode switch**
+
+| Switch | ESP32 |
+| :--- | :--- |
+| Common (middle pin) | GND |
+| Side A | GPIO 34, plus a 10 kΩ pull-up to 3.3 V |
+| Side B | GPIO 35, plus a 10 kΩ pull-up to 3.3 V |
+
+> **Wiring notes**
+> - GPIO 34 and 35 are input-only and have **no internal pull-up**. Without the external
+>   resistors the pins float and the device jumps between modes on its own.
+> - GPIO 12 is a boot strapping pin. Make sure nothing pulls it high while the ESP32 boots.
+> - GPIO 3 is also the USB-serial RX line. While the ADC clock is running, the Serial
+>   Monitor can't send data to the board.
 
 ---
-*Desenvolvido em C++ / ESP-IDF nativo portado para Arduino Core.*
+
+## Building the firmware
+
+1. Install the **Arduino IDE** and the **esp32 by Espressif** board package. The sketch uses the
+   legacy `driver/i2s.h` API and is verified to compile with esp32 **3.3.10** and ESP32-A2DP **1.8.11**.
+2. Install these libraries from the Library Manager (`Ctrl+Shift+I`):
+   - `Adafruit GFX Library`
+   - `Adafruit SSD1306`
+   - `ESP32-A2DP` by Phil Schatzmann
+3. Open `ESP32_audio_project/ESP32_audio_project.ino`.
+4. Select **Tools → Board → ESP32 Dev Module**.
+5. Select **Tools → Partition Scheme → Huge APP (3MB No OTA/1MB SPIFFS)**. This is required:
+   Wi-Fi, the web server and Bluetooth together don't fit in the default partition.
+6. Upload.
+
+## First-time setup
+
+Only the TCP server mode needs Wi-Fi. Bluetooth and Aux work right away.
+
+1. Set the switch to **A** (TCP server) and power the device. With no saved network, the OLED
+   shows the setup screen.
+2. On your phone, join the open Wi-Fi network **`AudioServer_Setup`**.
+3. Open **http://192.168.4.1** in the browser.
+4. Pick your network, enter the password, choose your time zone and save. The device restarts
+   and joins your network.
+5. The OLED shows the selected mode and the device's IP address.
+
+If the saved network doesn't answer within 10 seconds (for example, the router is still
+booting after a power cut), the OLED shows **CAN'T JOIN WI-FI**. The device keeps the saved
+settings, opens `AudioServer_Setup` in case you want to pick another network, and retries the
+saved one every 30 seconds. As soon as it connects, it restarts in normal mode.
+
+To change networks later, open the dashboard and use **Reset Wi-Fi**, which erases the saved
+network and restarts the device.
+
+## Dashboard
+
+Browse to `http://<device-ip>/` from any device on the same network. The page refreshes every
+3 seconds and shows:
+
+- current mode and IP address;
+- connected TCP clients (out of 4);
+- network time in your time zone;
+- line-in and line-out levels.
+
+The dashboard works in TCP server mode, and in Aux mode when a network is saved. It isn't
+available in Bluetooth mode, because Wi-Fi is off.
+
+---
+
+## Using each mode
+
+### A — Wi-Fi audio server (TCP)
+
+| | |
+| :--- | :--- |
+| Protocol | Raw TCP socket |
+| Port | `7000` |
+| Clients | Up to 4 at once |
+| Audio format | PCM, 44,100 Hz, 16-bit signed little-endian, 2 channels interleaved |
+
+- **Device → client:** as soon as a client connects, the device sends the line input continuously,
+  in 512-byte blocks (128 stereo frames, about 2.9 ms). Every connected client gets the same stream.
+- **Client → device:** write raw PCM in the same format to the socket and it plays on the line
+  output. The device plays one 512-byte block at a time from the first client that has a full
+  block waiting, so send audio from one client at a time.
+- **Keep reading.** A client that only sends audio must still read and discard the incoming
+  stream; otherwise the device's TCP buffer fills up and audio stalls.
+- Add a jitter buffer of at least 50 ms in your client to ride out Wi-Fi hiccups.
+
+**Example clients (Python):** the repository includes two Jupyter notebooks. Set `ESP32_IP` to
+the address shown on the OLED before running them.
+
+| Notebook | What it does | Needs |
+| :--- | :--- | :--- |
+| `test_tcp_LINE_IN.ipynb` | Plays the device's line input on the PC speakers | `pip install pyaudio` |
+| `test_tcp_LINE_OUT.ipynb` | Captures what the PC is playing (loopback) and sends it to the line output | `pip install soundcard numpy` |
+
+### Center — Bluetooth speaker (A2DP)
+
+Pair your phone or computer with **`Audio_Server_ESP32`**. Audio plays on the line output, and the
+OLED shows the output level and whether music is playing. Wi-Fi is off in this mode.
+
+### B — Aux pass-through
+
+The line input goes straight to the line output through the ESP32. Use it to monitor the
+input locally without a network. If a Wi-Fi network is saved, the device joins it in the
+background so the dashboard stays available; the audio doesn't depend on it.
+
+---
+
+## Specifications
+
+| | |
+| :--- | :--- |
+| Sample rate / resolution | 44.1 kHz / 16-bit, stereo |
+| Audio interface | 2 × I2S (full duplex), ESP32 as clock master |
+| ADC / DAC | PCM1808 / PCM5102A |
+| Network | Wi-Fi 2.4 GHz, TCP port 7000, web dashboard on port 80 |
+| Bluetooth | Classic Bluetooth A2DP sink |
+| Display | 128 × 64 SSD1306 OLED |
+| Clock | NTP (`pool.ntp.org`), time zone chosen at setup (UTC offset, no daylight saving) |
+
+## Troubleshooting
+
+| Symptom | Fix |
+| :--- | :--- |
+| `text section exceeds available space` when compiling | Set **Partition Scheme** to **Huge APP**. |
+| Mode changes by itself | Add the 10 kΩ pull-ups on GPIO 34 and 35. |
+| No sound from the DAC | Check the PCM5102A solder jumpers: on most boards **XSMT** must be high (unmuted). |
+| No signal from the line input | Check that the PCM1808 SCK pin is wired to GPIO 3 and that FMT, MD0 and MD1 are grounded. |
+| OLED stays blank | Check GPIO 21/22 and the I2C address (`0x3C`). |
+| No Bluetooth audio | Install `ESP32-A2DP` and pair with `Audio_Server_ESP32`. |
+| OLED shows **CAN'T JOIN WI-FI** | The saved network didn't answer. Wait: the device retries every 30 s and connects on its own when the router is back. If the password changed, join `AudioServer_Setup` and enter it again. |
+
+---
+
+## Project files
+
+| Path | Contents |
+| :--- | :--- |
+| `ESP32_audio_project/ESP32_audio_project.ino` | Main sketch: mode state machine, TCP server, Bluetooth, OLED |
+| `ESP32_audio_project/AudioI2SForESP32.h` | I2S setup for the ADC and DAC, including the master clock on GPIO 3 |
+| `ESP32_audio_project/html_pages.h` | Setup and dashboard web pages, served by the device |
+| `ESP32_audio_project/logo_png.h` | Logo for the web pages, stored in flash so it shows even without internet |
+| `ESP32_audio_project/setup.html`, `dashboard.html` | Static previews of the web pages with sample data |
+| `ESP32_audio_project/logo_web.png` | Source image for `logo_png.h` |
+| `test_tcp_LINE_IN.ipynb`, `test_tcp_LINE_OUT.ipynb` | Python test clients |
+
+## License
+
+© 2026 Sergio Levy · Wyrá. Proprietary license: you may build and modify this project for
+personal, educational and non-commercial use. Selling it, or using it in a commercial product,
+needs written permission. See [LICENSE](LICENSE).
+
+Bluetooth support uses [ESP32-A2DP](https://github.com/pschatzmann/ESP32-A2DP) by Phil
+Schatzmann; the display uses the Adafruit GFX and SSD1306 libraries.

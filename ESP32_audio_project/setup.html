@@ -1,0 +1,100 @@
+<!-- Prévia estática da página de configuração (dados de exemplo). A página real fica em html_pages.h. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wyrá - Setup</title>
+  <link rel="icon" type="image/png" href="logo_web.png">
+  <style>
+    :root {
+      --bg-color: #000000;
+      --card-bg: #121212;
+      --primary: #c38b38;
+      --primary-hover: #a3722b;
+      --text-main: #ffffff;
+      --text-muted: #888888;
+      --input-bg: #1e1e1e;
+      --border-color: #333333;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; padding: 20px;
+    }
+    .card {
+      background: var(--card-bg); width: 100%; max-width: 400px;
+      padding: 40px 30px; border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+      border: 1px solid var(--border-color); text-align: center;
+    }
+    .logo-container { margin-bottom: 25px; background: rgba(0, 0, 0, 0)}
+    .logo-container img { max-width: 220px; width: 100%; height: auto; }
+    .brand { font-family: ui-monospace, Consolas, Menlo, monospace; font-size: 26px; letter-spacing: 2px; margin-top: 8px; }
+    .header { margin-bottom: 30px; }
+    .header p { color: var(--text-muted); font-size: 15px; letter-spacing: 1px; text-transform: uppercase;}
+    .notice {
+      background: rgba(195, 139, 56, 0.12); border: 1px solid rgba(195, 139, 56, 0.4);
+      color: var(--text-main); font-size: 14px; line-height: 1.5; text-align: left;
+      padding: 12px 14px; border-radius: 8px; margin-bottom: 20px;
+    }
+    .input-group { margin-bottom: 20px; text-align: left; }
+    label {
+      display: block; font-size: 12px; font-weight: 600; color: var(--text-muted);
+      margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    select, input {
+      width: 100%; padding: 14px; background: var(--input-bg); color: var(--text-main);
+      border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px;
+      transition: all 0.3s ease; appearance: none; -webkit-appearance: none;
+    }
+    select {
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23888888%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+      background-repeat: no-repeat; background-position: right 14px top 50%; background-size: 12px auto;
+    }
+    select:focus, input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(195, 139, 56, 0.3); }
+    button {
+      width: 100%; padding: 14px; margin-top: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: white; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    button:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(195, 139, 56, 0.4); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo-container">
+      <img src="logo_web.png" alt="">
+      <div class="brand">Wyrá</div>
+    </div>
+    <div class="header">
+      <p>Network setup</p>
+    </div>
+    <div class='notice'>Couldn't join <b>Studio_WiFi</b>. The device keeps retrying every 30 seconds. To use another network, choose it below.</div>
+    <form onsubmit="return false">
+      <div class="input-group">
+        <label>Wi-Fi network</label>
+        <select name="ssid" required>
+          <option value="" disabled selected>Choose a network</option>
+          <option value='Studio_WiFi' selected>Studio_WiFi (-48 dBm)</option><option value='Church_Main'>Church_Main (-61 dBm)</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Wi-Fi password</label>
+        <input type="password" name="pass" placeholder="Leave blank for an open network">
+      </div>
+      <div class="input-group">
+        <label>Time zone</label>
+        <select name="tz">
+          <option value='-720'>UTC-12:00</option><option value='-690'>UTC-11:30</option><option value='-660'>UTC-11:00</option><option value='-630'>UTC-10:30</option><option value='-600'>UTC-10:00</option><option value='-570'>UTC-09:30</option><option value='-540'>UTC-09:00</option><option value='-510'>UTC-08:30</option><option value='-480'>UTC-08:00</option><option value='-450'>UTC-07:30</option><option value='-420'>UTC-07:00</option><option value='-390'>UTC-06:30</option><option value='-360'>UTC-06:00</option><option value='-330'>UTC-05:30</option><option value='-300'>UTC-05:00</option><option value='-270'>UTC-04:30</option><option value='-240'>UTC-04:00</option><option value='-210'>UTC-03:30</option><option value='-180' selected>UTC-03:00</option><option value='-150'>UTC-02:30</option><option value='-120'>UTC-02:00</option><option value='-90'>UTC-01:30</option><option value='-60'>UTC-01:00</option><option value='-30'>UTC-00:30</option><option value='0'>UTC+00:00</option><option value='30'>UTC+00:30</option><option value='60'>UTC+01:00</option><option value='90'>UTC+01:30</option><option value='120'>UTC+02:00</option><option value='150'>UTC+02:30</option><option value='180'>UTC+03:00</option><option value='210'>UTC+03:30</option><option value='240'>UTC+04:00</option><option value='270'>UTC+04:30</option><option value='300'>UTC+05:00</option><option value='330'>UTC+05:30</option><option value='360'>UTC+06:00</option><option value='390'>UTC+06:30</option><option value='420'>UTC+07:00</option><option value='450'>UTC+07:30</option><option value='480'>UTC+08:00</option><option value='510'>UTC+08:30</option><option value='540'>UTC+09:00</option><option value='570'>UTC+09:30</option><option value='600'>UTC+10:00</option><option value='630'>UTC+10:30</option><option value='660'>UTC+11:00</option><option value='690'>UTC+11:30</option><option value='720'>UTC+12:00</option><option value='750'>UTC+12:30</option><option value='780'>UTC+13:00</option><option value='810'>UTC+13:30</option><option value='840'>UTC+14:00</option>
+        </select>
+      </div>
+      <button type="submit">Save and connect</button>
+    </form>
+  </div>
+</body>
+</html>
